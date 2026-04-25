@@ -1,10 +1,10 @@
 # MCP Config Inventory
 
-MCP Config Inventory is a local read-only CLI that inspects MCP configuration files and reports which MCP servers an agent is configured to use. It does not start servers, call tools, perform a protocol handshake, scan for malware, or decide whether an agent is safe. It only makes the configured MCP surface visible before runtime.
+MCP Config Inventory is a local CLI that is read-only with respect to MCP configs and servers. It inspects MCP configuration files and reports which MCP servers an agent is configured to use. It does not start servers, call tools, perform a protocol handshake, scan for malware, or decide whether an agent is safe. It only makes the configured MCP surface visible before runtime, and only writes a JSON artifact when `--json-out` is provided.
 
 ## What this is
 
-This is a narrow TypeScript CLI for reading MCP configuration JSON and producing a deterministic inventory of declared MCP servers. For v0.1 it focuses on the common Claude Desktop-style `mcpServers` shape.
+This is a narrow TypeScript CLI for parsing MCP configuration JSON and producing a deterministic inventory of declared MCP servers. For v0.1 it focuses on the common Claude Desktop-style `mcpServers` shape.
 
 The CLI reports each server name, inferred transport, command, args, environment variable key names, static category tags, and limitations.
 
@@ -12,7 +12,7 @@ The CLI reports each server name, inferred transport, command, args, environment
 
 This is not an agent security framework, vulnerability scanner, safety verdict tool, runtime MCP client, firewall, or AgentGate integration.
 
-It does not start MCP servers, execute configured commands, perform MCP handshakes, inspect live tools, read secret values, or decide whether an agent is safe.
+It does not start MCP servers, execute configured commands, perform MCP handshakes, inspect live tools, print, persist, or report env secret values, or decide whether an agent is safe.
 
 ## Why this exists
 
@@ -91,7 +91,7 @@ Category tags are descriptive static surface categories, not risk scores or safe
 - `mutation_possible`
 - `unknown`
 
-Inference is intentionally simple. For example, `@modelcontextprotocol/server-filesystem` is tagged with `filesystem`, `local_path_access`, and `mutation_possible`. Env key names are reported as key names only; values are never included in output. Sensitive-looking env key names such as `TOKEN`, `KEY`, `SECRET`, `PASSWORD`, or `CREDENTIAL` add the `credentials` category.
+Inference is intentionally simple. For example, `@modelcontextprotocol/server-filesystem` is tagged with `filesystem`, `local_path_access`, and `mutation_possible`. The tool parses the config file, but env key names are reported as key names only and env values are discarded from inventory output. Sensitive-looking env key names such as `TOKEN`, `KEY`, `SECRET`, `PASSWORD`, or `CREDENTIAL` add the `credentials` category.
 
 ## JSON Output
 
@@ -109,7 +109,7 @@ The JSON artifact contains env key names only:
 }
 ```
 
-It does not contain env values.
+It does not contain env values. Env secret values are not printed, persisted, or reported in the terminal report or JSON artifact.
 
 ## Limitations
 

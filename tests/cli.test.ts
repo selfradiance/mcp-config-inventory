@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { runCli } from "../src/cli.js";
+import { defaultClaudeDesktopConfigPath, runCli } from "../src/cli.js";
 
 const repoRoot = process.cwd();
 const tempDirs: string[] = [];
@@ -40,6 +40,57 @@ describe("CLI", () => {
     expect(artifact).not.toContain("secret-token");
     expect(artifact).not.toContain("secret-value");
     expect(artifact).not.toContain("not-for-output");
+  });
+
+  it("writes a terminal report with env key names and no env values", async () => {
+    const io = createIo();
+    const exitCode = await runCli(["--config", "fixtures/env-redaction.sample.json"], io);
+
+    expect(exitCode).toBe(0);
+    expect(io.stdoutText()).toContain("GITHUB_TOKEN");
+    expect(io.stdoutText()).toContain("SOME_KEY");
+    expect(io.stdoutText()).toContain("PLAIN_SETTING");
+    expect(io.stdoutText()).not.toContain("secret-token");
+    expect(io.stdoutText()).not.toContain("secret-value");
+    expect(io.stdoutText()).not.toContain("not-for-output");
+  });
+
+  it("exits nonzero when JSON output would overwrite the inspected config", async () => {
+    const io = createIo();
+    const exitCode = await runCli(
+      [
+        "--config",
+        "fixtures/env-redaction.sample.json",
+        "--json-out",
+        "fixtures/env-redaction.sample.json"
+      ],
+      io
+    );
+
+    expect(exitCode).toBe(1);
+    expect(io.stderrText()).toContain("must not overwrite the inspected config file");
+  });
+
+  it("exits nonzero when JSON output would overwrite the default Claude Desktop config", async () => {
+    const io = createIo();
+    const exitCode = await runCli(
+      ["--claude-desktop", "--json-out", defaultClaudeDesktopConfigPath()],
+      io
+    );
+
+    expect(exitCode).toBe(1);
+    expect(io.stderrText()).toContain("must not overwrite the inspected config file");
+  });
+
+  it("exits nonzero when --config and --claude-desktop are both passed", async () => {
+    const io = createIo();
+    const exitCode = await runCli(
+      ["--config", "fixtures/claude-desktop.sample.json", "--claude-desktop"],
+      io
+    );
+
+    expect(exitCode).toBe(1);
+    expect(io.stderrText()).toContain("Use either --config <path> or --claude-desktop");
   });
 
   it("exits nonzero on a missing config file", async () => {

@@ -43,6 +43,11 @@ export async function runCli(
     return 0;
   }
 
+  if (options.config && options.claudeDesktop) {
+    io.stderr.write("Use either --config <path> or --claude-desktop, not both.\n");
+    return 1;
+  }
+
   const configPath = options.config ?? (options.claudeDesktop ? defaultClaudeDesktopConfigPath() : undefined);
 
   if (!configPath) {
@@ -53,13 +58,19 @@ export async function runCli(
 
   try {
     const resolvedConfigPath = path.resolve(io.cwd, configPath);
+    const resolvedJsonOutPath = options.jsonOut ? path.resolve(io.cwd, options.jsonOut) : undefined;
+
+    if (resolvedJsonOutPath === resolvedConfigPath) {
+      io.stderr.write("--json-out must not overwrite the inspected config file.\n");
+      return 1;
+    }
+
     const parsedConfig = await loadMcpConfigFile(resolvedConfigPath, configPath);
     const inventory = buildInventory(parsedConfig);
 
-    if (options.jsonOut) {
-      const jsonOutPath = path.resolve(io.cwd, options.jsonOut);
-      await mkdir(path.dirname(jsonOutPath), { recursive: true });
-      await writeFile(jsonOutPath, `${JSON.stringify(inventory, null, 2)}\n`, "utf8");
+    if (resolvedJsonOutPath) {
+      await mkdir(path.dirname(resolvedJsonOutPath), { recursive: true });
+      await writeFile(resolvedJsonOutPath, `${JSON.stringify(inventory, null, 2)}\n`, "utf8");
     }
 
     io.stdout.write(renderInventoryReport(inventory));

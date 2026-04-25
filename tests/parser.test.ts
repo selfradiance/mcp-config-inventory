@@ -43,4 +43,20 @@ describe("parser", () => {
     expect(JSON.stringify(parsed)).not.toContain("super-secret");
     expect(JSON.stringify(parsed)).not.toContain("also-not-output");
   });
+
+  it("rejects an empty command string", () => {
+    expect(() =>
+      parseMcpConfigJson(
+        JSON.stringify({
+          mcpServers: {
+            empty: {
+              command: "",
+              args: []
+            }
+          }
+        }),
+        "inline.json"
+      )
+    ).toThrow("Invalid MCP config");
+  });
 });
