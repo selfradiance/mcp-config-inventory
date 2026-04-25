@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mystery": {
+      "command": "node",
+      "args": ["server.js"]
+    }
+  }
+}

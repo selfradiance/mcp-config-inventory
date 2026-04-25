@@ -1,0 +1,28 @@
+{
+  "name": "mcp-config-inventory",
+  "version": "0.1.0",
+  "description": "Local read-only CLI for inventorying declared MCP servers from config files.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "mcp-config-inventory": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.15",
+    "tsx": "^4.16.5",
+    "typescript": "^5.5.4",
+    "vitest": "^4.1.5"
+  }
+}
